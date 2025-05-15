@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const { initializeVectorStore, answerQuestion } = require('./index');
+const os = require('os');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,28 +15,40 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Vercel için özelleştirilmiş PDF yükleme yapılandırması
+// Vercel ortamını tespit et
 const isVercel = process.env.VERCEL === '1';
 
-// PDF dosyaları için upload ayarları
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Klasörün varlığını kontrol et, yoksa oluştur
-    const uploadDir = path.join(__dirname, '../public/pdfs');
-    if (!fs.existsSync(uploadDir)) {
-      try {
-        fs.mkdirSync(uploadDir, { recursive: true });
-        console.log('PDF klasörü oluşturuldu:', uploadDir);
-      } catch (error) {
-        console.error('PDF klasörü oluşturulurken hata:', error);
-      }
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
+// PDF dosya yolu belirleme
+let uploadDir;
+if (isVercel) {
+  // Vercel ortamında geçici dizin kullan
+  uploadDir = path.join(os.tmpdir(), 'pdfs');
+} else {
+  // Lokal ortamda normal dizin kullan
+  uploadDir = path.join(__dirname, '../public/pdfs');
+}
+
+// Klasörün varlığını kontrol et, yoksa oluştur
+if (!fs.existsSync(uploadDir)) {
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('PDF klasörü oluşturuldu:', uploadDir);
+  } catch (error) {
+    console.error('PDF klasörü oluşturulurken hata:', error);
   }
-});
+}
+
+// Vercel için bellek içi depolama, yerel geliştirme için disk depolama
+const storage = isVercel 
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, uploadDir);
+      },
+      filename: (req, file, cb) => {
+        cb(null, file.originalname);
+      }
+    });
 
 const upload = multer({
   storage,
@@ -63,21 +76,38 @@ const asyncHandler = (fn) => (req, res, next) => {
 
 // PDF dosyalarını listele
 app.get('/api/pdf-list', asyncHandler(async (req, res) => {
-  const pdfDir = path.join(__dirname, '../public/pdfs');
-  
-  // Klasör yoksa oluştur
-  if (!fs.existsSync(pdfDir)) {
-    fs.mkdirSync(pdfDir, { recursive: true });
+  try {
+    let pdfFiles = [];
+    
+    if (isVercel) {
+      // Vercel'de geçici depolama dizinini kontrol et
+      if (fs.existsSync(uploadDir)) {
+        const files = await fs.promises.readdir(uploadDir);
+        pdfFiles = files.filter(file => file.endsWith('.pdf'));
+      }
+    } else {
+      // Lokal ortamda normal dizini kontrol et
+      const pdfDir = path.join(__dirname, '../public/pdfs');
+      
+      // Klasör yoksa oluştur
+      if (!fs.existsSync(pdfDir)) {
+        fs.mkdirSync(pdfDir, { recursive: true });
+      }
+      
+      const files = await fs.promises.readdir(pdfDir);
+      pdfFiles = files.filter(file => file.endsWith('.pdf'));
+    }
+    
+    res.json({ files: pdfFiles });
+  } catch (error) {
+    console.error('PDF listesi alınırken hata:', error);
+    res.status(500).json({ error: 'PDF dosyaları listelenirken bir hata oluştu: ' + error.message });
   }
-  
-  const files = await fs.promises.readdir(pdfDir);
-  const pdfFiles = files.filter(file => file.endsWith('.pdf'));
-  res.json({ files: pdfFiles });
 }));
 
 // PDF dosyası yükle
 app.post('/api/upload-pdf', (req, res) => {
-  upload.array('pdfs', 10)(req, res, (err) => {
+  upload.array('pdfs', 10)(req, res, async (err) => {
     if (err) {
       console.error('Multer hatası:', err);
       return res.status(400).json({ 
@@ -88,13 +118,29 @@ app.post('/api/upload-pdf', (req, res) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'Hiç PDF dosyası yüklenmedi.' });
     }
-    
-    const uploadedFiles = req.files.map(file => file.originalname);
-    res.json({ 
-      success: true, 
-      message: `${uploadedFiles.length} PDF dosyası başarıyla yüklendi.`,
-      files: uploadedFiles 
-    });
+
+    try {
+      // Vercel ortamında dosyaları geçici dizine kaydet
+      if (isVercel) {
+        for (const file of req.files) {
+          const filePath = path.join(uploadDir, file.originalname);
+          await fs.promises.writeFile(filePath, file.buffer);
+          console.log(`Dosya geçici dizine kaydedildi: ${filePath}`);
+        }
+      }
+
+      const uploadedFiles = req.files.map(file => file.originalname);
+      res.json({ 
+        success: true, 
+        message: `${uploadedFiles.length} PDF dosyası başarıyla yüklendi.`,
+        files: uploadedFiles 
+      });
+    } catch (error) {
+      console.error('Dosya yazma hatası:', error);
+      res.status(500).json({ 
+        error: 'Dosya kaydedilirken bir hata oluştu: ' + error.message 
+      });
+    }
   });
 });
 
