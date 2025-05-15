@@ -1,0 +1,174 @@
+/* Temel stiller */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  line-height: 1.6;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+h2 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+/* PDF bölümü */
+.pdf-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.upload-container {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 2px dashed #ccc;
+  border-radius: 5px;
+  text-align: center;
+}
+
+#upload-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+#pdf-upload {
+  padding: 10px;
+  flex: 1;
+}
+
+#upload-btn, #initialize-btn, #ask-btn {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#upload-btn:hover, #initialize-btn:hover, #ask-btn:hover {
+  background-color: #2980b9;
+}
+
+.pdf-list-container {
+  margin-top: 20px;
+}
+
+#pdf-list {
+  list-style-type: none;
+  margin: 15px 0;
+}
+
+#pdf-list li {
+  padding: 8px;
+  margin-bottom: 5px;
+  background-color: #f9f9f9;
+  border-left: 3px solid #3498db;
+  border-radius: 3px;
+}
+
+/* Sohbet bölümü */
+.chat-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+}
+
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  border: 1px solid #eee;
+}
+
+.message {
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.user-message {
+  background-color: #e3f2fd;
+  align-self: flex-end;
+  border-left: 3px solid #2196f3;
+  margin-left: 20%;
+}
+
+.bot-message {
+  background-color: #f1f8e9;
+  align-self: flex-start;
+  border-left: 3px solid #8bc34a;
+  margin-right: 20%;
+}
+
+.input-area {
+  display: flex;
+  gap: 10px;
+}
+
+#question-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Duyarlı tasarım */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  #upload-form {
+    flex-direction: column;
+  }
+  
+  .chat-container {
+    height: 400px;
+  }
+}

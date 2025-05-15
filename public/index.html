@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Chat - RAG Uygulaması</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>PDF Chat - RAG Uygulaması</h1>
+      <p>PDF dosyalarınızı yükleyin ve içerikleri hakkında sorular sorun.</p>
+    </header>
+
+    <div class="pdf-section">
+      <h2>PDF Dosyaları</h2>
+      <div class="upload-container">
+        <form id="upload-form" enctype="multipart/form-data">
+          <input type="file" id="pdf-upload" name="pdfs" accept=".pdf" multiple>
+          <button type="submit" id="upload-btn">PDF Yükle</button>
+        </form>
+      </div>
+      
+      <div class="pdf-list-container">
+        <h3>Yüklenen PDF'ler</h3>
+        <ul id="pdf-list"></ul>
+        <button id="initialize-btn">Veritabanını Başlat</button>
+      </div>
+    </div>
+
+    <div class="chat-section">
+      <h2>PDF Sorgulama</h2>
+      <div class="chat-container">
+        <div id="chat-messages"></div>
+        <div class="input-area">
+          <input type="text" id="question-input" placeholder="PDF'ler hakkında bir soru sorun...">
+          <button id="ask-btn">Sor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

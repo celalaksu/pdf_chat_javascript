@@ -1,0 +1,35 @@
+{
+  "name": "pdf_chat_javascript",
+  "version": "1.0.0",
+  "description": "PDF tabanlı RAG (Retrieval Augmented Generation) uygulaması",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "rag",
+    "pdf",
+    "chatbot",
+    "langchain",
+    "openai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@langchain/community": "^0.3.42",
+    "@langchain/google-genai": "^0.2.9",
+    "@langchain/openai": "^0.5.10",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "langchain": "^0.3.25",
+    "multer": "^1.4.5-lts.2",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
