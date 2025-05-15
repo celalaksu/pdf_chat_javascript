@@ -62,7 +62,7 @@ async function answerQuestion(question) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
     // Prompt oluştur
-    const promptText = `Aşağıdaki bilgilere dayanarak soruda belirtilen konu hakkında bilgi verin. Eğer yanıt belgede yoksa, lütfen "Bu sorunun yanıtı belgede mevcut değil" deyin.
+    const promptText = `Aşağıdaki bilgilere dayanarak soruda belirtilen konu hakkında bilgi verin. Sorunun tam cevabı yok ise; soruda geçen konu hakkında bilgi ver. Eğer konu hakkında belgede hiç bir şey yoksa, lütfen "Bu sorunun yanıtı belgede mevcut değil" deyin.
       
       Belge içeriği:
       ${context}
