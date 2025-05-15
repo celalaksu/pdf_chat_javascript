@@ -11,6 +11,34 @@ const askBtn = document.getElementById('ask-btn');
 // Uygulama durumu
 let isInitialized = false;
 
+// API isteği işleyici yardımcı fonksiyon
+async function handleApiRequest(url, options, errorMessage) {
+  try {
+    const response = await fetch(url, options);
+    let result;
+    
+    // Yanıt türüne göre işleyin
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      result = await response.json();
+    } else {
+      throw new Error(`Geçersiz yanıt türü: ${contentType}. JSON bekleniyor.`);
+    }
+    
+    if (!response.ok) {
+      throw new Error(result.error || `HTTP hata kodu: ${response.status}`);
+    }
+    
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(`${errorMessage}:`, error);
+    return { 
+      success: false, 
+      error: error.message || errorMessage 
+    };
+  }
+}
+
 // PDF dosyası yükleme işlemi
 uploadForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -29,55 +57,65 @@ uploadForm.addEventListener('submit', async (e) => {
   uploadBtn.disabled = true;
   uploadBtn.textContent = 'Yükleniyor...';
   
-  try {
-    const response = await fetch('/api/upload-pdf', {
-      method: 'POST',
-      body: formData
-    });
-    
-    const result = await response.json();
-    
-    if (response.ok) {
-      showMessage(`${result.message}`, 'bot-message');
-      fetchPDFList();
+  const result = await handleApiRequest(
+    '/api/upload-pdf',
+    { method: 'POST', body: formData },
+    'PDF yüklenirken hata oluştu'
+  );
+  
+  if (result.success) {
+    showMessage(result.data.message, 'bot-message');
+    const pdfListResult = await fetchPDFList();
+    if (pdfListResult.success) {
       // Yükleme başarılı olduysa, vektör veritabanının yeniden oluşturulması gerektiğini işaret et
       isInitialized = false;
-    } else {
-      showMessage(`Hata: ${result.error}`, 'bot-message');
     }
-  } catch (error) {
-    showMessage(`Bir hata oluştu: ${error.message}`, 'bot-message');
-  } finally {
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = 'PDF Yükle';
-    uploadForm.reset();
+  } else {
+    showMessage(`Hata: ${result.error}`, 'bot-message');
   }
+  
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = 'PDF Yükle';
+  uploadForm.reset();
 });
 
 // PDF listesini getir
 async function fetchPDFList() {
-  try {
-    const response = await fetch('/api/pdf-list');
-    const result = await response.json();
-    
+  const result = await handleApiRequest(
+    '/api/pdf-list',
+    { method: 'GET' },
+    'PDF listesi alınırken hata oluştu'
+  );
+  
+  if (result.success) {
     pdfList.innerHTML = '';
     
-    if (result.files.length === 0) {
+    const files = result.data.files || [];
+    
+    if (files.length === 0) {
       const li = document.createElement('li');
       li.textContent = 'Henüz PDF dosyası yüklenmemiş.';
       pdfList.appendChild(li);
       initializeBtn.disabled = true;
     } else {
-      result.files.forEach(file => {
+      files.forEach(file => {
         const li = document.createElement('li');
         li.textContent = file;
         pdfList.appendChild(li);
       });
       initializeBtn.disabled = false;
     }
-  } catch (error) {
-    console.error('PDF listesi alınırken bir hata oluştu:', error);
+  } else {
+    console.error('PDF listesi alınamadı:', result.error);
+    // Hata mesajı gösterme
+    const li = document.createElement('li');
+    li.textContent = `Liste alınamadı: ${result.error}`;
+    li.className = 'error';
+    pdfList.innerHTML = '';
+    pdfList.appendChild(li);
   }
+  
+  return result;
 }
 
 // Vektör veritabanını başlat
@@ -86,25 +124,21 @@ initializeBtn.addEventListener('click', async () => {
   initializeBtn.textContent = 'Başlatılıyor...';
   showMessage('Vektör veritabanı oluşturuluyor, lütfen bekleyin...', 'bot-message');
   
-  try {
-    const response = await fetch('/api/initialize', {
-      method: 'POST'
-    });
-    
-    const result = await response.json();
-    
-    if (response.ok) {
-      showMessage(result.message, 'bot-message');
-      isInitialized = true;
-    } else {
-      showMessage(`Hata: ${result.error}`, 'bot-message');
-    }
-  } catch (error) {
-    showMessage(`Bir hata oluştu: ${error.message}`, 'bot-message');
-  } finally {
-    initializeBtn.disabled = false;
-    initializeBtn.textContent = 'Veritabanını Başlat';
+  const result = await handleApiRequest(
+    '/api/initialize',
+    { method: 'POST' },
+    'Veritabanı başlatılırken hata oluştu'
+  );
+  
+  if (result.success) {
+    showMessage(result.data.message, 'bot-message');
+    isInitialized = true;
+  } else {
+    showMessage(`Hata: ${result.error}`, 'bot-message');
   }
+  
+  initializeBtn.disabled = false;
+  initializeBtn.textContent = 'Veritabanını Başlat';
 });
 
 // Soru sorma işlemi
@@ -135,28 +169,26 @@ async function askQuestion() {
   askBtn.disabled = true;
   askBtn.textContent = 'Yanıtlanıyor...';
   
-  try {
-    const response = await fetch('/api/ask', {
+  const result = await handleApiRequest(
+    '/api/ask',
+    {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ question })
-    });
-    
-    const result = await response.json();
-    
-    if (response.ok) {
-      showMessage(result.answer, 'bot-message');
-    } else {
-      showMessage(`Hata: ${result.error}`, 'bot-message');
-    }
-  } catch (error) {
-    showMessage(`Bir hata oluştu: ${error.message}`, 'bot-message');
-  } finally {
-    askBtn.disabled = false;
-    askBtn.textContent = 'Sor';
+    },
+    'Soru yanıtlanırken hata oluştu'
+  );
+  
+  if (result.success) {
+    showMessage(result.data.answer, 'bot-message');
+  } else {
+    showMessage(`Hata: ${result.error}`, 'bot-message');
   }
+  
+  askBtn.disabled = false;
+  askBtn.textContent = 'Sor';
 }
 
 // Mesaj gösterme işlemi
