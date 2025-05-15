@@ -11,11 +11,6 @@ const askBtn = document.getElementById('ask-btn');
 // Uygulama durumu
 let isInitialized = false;
 
-// Sayfa yüklendiğinde PDF listesini güncelle
-document.addEventListener('DOMContentLoaded', () => {
-  fetchPDFList();
-});
-
 // PDF dosyası yükleme işlemi
 uploadForm.addEventListener('submit', async (e) => {
   e.preventDefault();
