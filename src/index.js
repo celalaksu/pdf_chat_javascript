@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { loadPDFDocuments, deleteProcessedPDFs } = require('./utils/pdfLoader');
+const { loadPDFDocuments } = require('./utils/pdfLoader');
 const { createVectorStore, retrieveSimilarDocuments } = require('./utils/vectorStore');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -12,20 +12,19 @@ const genAI = new GoogleGenerativeAI(apiKey);
 let vectorStore = null;
 
 /**
- * PDF dosyalarını yükleyip vektör veritabanına dönüştürür ve sonrasında PDF dosyalarını siler
+ * PDF dosyalarını yükleyip vektör veritabanına dönüştürür
  * @returns {Promise<boolean>} - İşlemin başarılı olup olmadığı
  */
 async function initializeVectorStore() {
   try {
     const result = await loadPDFDocuments();
-    const { documents, filePaths } = result;
+    const { documents } = result;
     
     if (documents.length > 0) {
       vectorStore = await createVectorStore(documents);
       console.log('Vektör veritabanı başarıyla oluşturuldu.');
       
-      // PDF dosyaları vektör veritabanına işlendikten sonra fiziksel olarak sil
-      await deleteProcessedPDFs(filePaths);
+      // PDF dosyaları artık sunucuda saklanıyor, silme işlemi kaldırıldı
       
       return true;
     } else {
